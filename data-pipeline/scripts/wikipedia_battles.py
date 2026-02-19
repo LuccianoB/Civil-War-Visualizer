@@ -73,3 +73,36 @@ def parse_CWSAC_from_table(html: str) -> List[Dict[str, str]]:
         battle_data.append(battle_info)
     
     return battle_data
+
+def clean_battle_data(battle_data: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    """Cleans and standardizes the battle data.
+    
+    Args:
+        battle_data (List[Dict[str, str]]): The raw battle data extracted from the table.
+
+    Returns:
+        List[Dict[str, str]]: A cleaned and standardized list of battle data.
+    """
+    cleaned_data = []
+    for battle in battle_data:
+        cleaned_battle = {}
+        # Standardize keys
+        for key, value in battle.items():
+            cleaned_value = re.sub(r'\[.*?\]', '', value)  # Remove references like [1], [2], etc.
+            cleaned_value = re.sub(r'\s+', ' ', cleaned_value).strip()  # Normalize whitespace
+            cleaned_battle[key] = cleaned_value
+        cleaned_data.append(cleaned_battle)
+    
+    return cleaned_data
+
+def filter_by_class(battles: List[Dict[str, str]], class_filter: List[str] = ['A','B']) -> List[Dict[str, str]]:
+    """Filters battles by their CWSAC class.
+    
+    Args:
+        battles (List[Dict[str, str]]): The list of battle data dictionaries.
+        class_filter (List[str]): The list of CWSAC classes to include (e.g., ['A', 'B']).
+
+    Returns:
+        List[Dict[str, str]]: A filtered list of battle data dictionaries.
+    """
+    return [battle for battle in battles if battle.get('CWSAC') in class_filter]

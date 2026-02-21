@@ -137,23 +137,21 @@ def find_battle_qid(battle_name: str) -> Optional[str]:
 
 def get_battle_data(qid: str) -> Dict:
     """
-    Get battle data (coordinates, dates) from Wikidata using its Q-ID.
+    Get battle coordinates from Wikidata using its Q-ID.
     
     Args:
         qid: The Wikidata Q-ID (e.g., "Q543165")
         
     Returns:
-        Dict with keys: 'coordinates', 'startDate', 'endDate' (values may be None if not found)
+        Dict with key: 'coordinates' (value may be None if not found)
     """
-    # Build the SPARQL query
+    # Build the SPARQL query (coordinates only — dates parsed from Wikipedia)
     sparql_query = f"""
     PREFIX wd: <http://www.wikidata.org/entity/>
     PREFIX wdt: <http://www.wikidata.org/prop/direct/>
     
-    SELECT ?coords ?startDate ?endDate WHERE {{
+    SELECT ?coords WHERE {{
       OPTIONAL {{ wd:{qid} wdt:P625 ?coords }}
-      OPTIONAL {{ wd:{qid} wdt:P580 ?startDate }}
-      OPTIONAL {{ wd:{qid} wdt:P582 ?endDate }}
     }}
     """
     
@@ -164,29 +162,25 @@ def get_battle_data(qid: str) -> Dict:
     
     if not response:
         logger.warning(f"No response from Wikidata for Q-ID: {qid}")
-        return {'coordinates': None, 'startDate': None, 'endDate': None}
+        return {'coordinates': None}
     
     # Extract data from response
     bindings = response.get('results', {}).get('bindings', [])
     
     if not bindings:
-        logger.debug(f"No data found for Q-ID {qid} (battle may lack coordinates/dates)")
-        return {'coordinates': None, 'startDate': None, 'endDate': None}
+        logger.debug(f"No data found for Q-ID {qid} (battle may lack coordinates)")
+        return {'coordinates': None}
     
     # Get the first result
     result = bindings[0]
     
-    # Extract coordinates, startDate, endDate
+    # Extract coordinates
     coordinates = result.get('coords', {}).get('value', None)
-    start_date = result.get('startDate', {}).get('value', None)
-    end_date = result.get('endDate', {}).get('value', None)
     
-    logger.debug(f"Retrieved data for {qid}: coords={bool(coordinates)}, startDate={bool(start_date)}, endDate={bool(end_date)}")
+    logger.debug(f"Retrieved data for {qid}: coords={bool(coordinates)}")
     
     return {
-        'coordinates': coordinates,
-        'startDate': start_date,
-        'endDate': end_date
+        'coordinates': coordinates
     }
 
 def enrich_battle(battle: Dict, qid: str, wikidata_data: Dict) -> Dict:
@@ -196,7 +190,7 @@ def enrich_battle(battle: Dict, qid: str, wikidata_data: Dict) -> Dict:
     Args:
         battle: The baseline battle dict from baseline_battles.json
         qid: The Wikidata Q-ID for the battle
-        wikidata_data: Dict with 'coordinates', 'startDate', 'endDate' from Wikidata
+        wikidata_data: Dict with 'coordinates' from Wikidata
         
     Returns:
         Enriched battle dict with Wikidata fields added
@@ -207,24 +201,12 @@ def enrich_battle(battle: Dict, qid: str, wikidata_data: Dict) -> Dict:
     # Add Wikidata Q-ID
     enriched['qid'] = qid
     
-    # Add Wikidata data (only if not None)
+    # Add coordinates (only if not None)
     if wikidata_data.get('coordinates'):
         enriched['wikidata_coordinates'] = wikidata_data['coordinates']
     
-    if wikidata_data.get('startDate'):
-        enriched['wikidata_startDate'] = wikidata_data['startDate']
-    
-    if wikidata_data.get('endDate'):
-        enriched['wikidata_endDate'] = wikidata_data['endDate']
-    
-    # Determine if data is complete
-    has_all_data = all([
-        wikidata_data.get('coordinates'),
-        wikidata_data.get('startDate'),
-        wikidata_data.get('endDate')
-    ])
-    
-    enriched['data_complete'] = has_all_data
+    # Data is complete when we have coordinates (dates come from Wikipedia)
+    enriched['data_complete'] = bool(wikidata_data.get('coordinates'))
     enriched['data_source'] = 'wikipedia_and_wikidata'
     
     logger.debug(f"Enriched battle '{battle.get('Battle', 'Unknown')}' with Q-ID {qid}")

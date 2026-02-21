@@ -109,6 +109,78 @@ def clean_battle_data(battles: List[Dict[str, str]]) -> List[Dict[str, str]]:
         cleaned.append(cleaned_battle)
     return cleaned
 
+def parse_date_range(date_str: str) -> Dict[str, str]:
+    """Parse a Wikipedia date string into structured start_date and end_date.
+    
+    Handles formats like:
+      - "July 11, 1861"                        (single day)
+      - "April 12-13, 1861"                     (same month range)
+      - "April 25- May 1, 1862"                 (cross-month, same year)
+      - "December 31, 1862-January 2, 1863"     (cross-month, cross-year)
+    
+    Args:
+        date_str: Raw date string from Wikipedia
+        
+    Returns:
+        Dict with 'start_date' and 'end_date' in YYYY-MM-DD format,
+        or both None if parsing fails.
+    """
+    from datetime import datetime
+
+    MONTHS = {
+        'January': 1, 'February': 2, 'March': 3, 'April': 4,
+        'May': 5, 'June': 6, 'July': 7, 'August': 8,
+        'September': 9, 'October': 10, 'November': 11, 'December': 12
+    }
+
+    try:
+        # Normalize dashes and whitespace
+        cleaned = re.sub(r'\s*-\s*', '-', date_str.strip())
+
+        # Pattern 1: Cross-month (possibly cross-year)
+        #   e.g. "April 25-May 1, 1862" or "December 31, 1862-January 2, 1863"
+        cross_month = re.match(
+            r'(\w+)\s+(\d+),?\s*(\d{4})?-?(\w+)\s+(\d+),\s*(\d{4})',
+            cleaned
+        )
+        if cross_month:
+            m1, d1, y1, m2, d2, y2 = cross_month.groups()
+            # If the first year is missing, it's the same year as the second
+            y1 = y1 if y1 else y2
+            start = datetime(int(y1), MONTHS[m1], int(d1))
+            end   = datetime(int(y2), MONTHS[m2], int(d2))
+            return {
+                'start_date': start.strftime('%Y-%m-%d'),
+                'end_date':   end.strftime('%Y-%m-%d')
+            }
+
+        # Pattern 2: Same-month range  e.g. "April 12-13, 1861"
+        same_month = re.match(r'(\w+)\s+(\d+)-(\d+),\s*(\d{4})', cleaned)
+        if same_month:
+            month, d1, d2, year = same_month.groups()
+            start = datetime(int(year), MONTHS[month], int(d1))
+            end   = datetime(int(year), MONTHS[month], int(d2))
+            return {
+                'start_date': start.strftime('%Y-%m-%d'),
+                'end_date':   end.strftime('%Y-%m-%d')
+            }
+
+        # Pattern 3: Single day  e.g. "July 11, 1861"
+        single_day = re.match(r'(\w+)\s+(\d+),\s*(\d{4})', cleaned)
+        if single_day:
+            month, day, year = single_day.groups()
+            dt = datetime(int(year), MONTHS[month], int(day))
+            formatted = dt.strftime('%Y-%m-%d')
+            return {'start_date': formatted, 'end_date': formatted}
+
+        logger.warning(f"Could not parse date: '{date_str}'")
+        return {'start_date': None, 'end_date': None}
+
+    except Exception as e:
+        logger.warning(f"Error parsing date '{date_str}': {e}")
+        return {'start_date': None, 'end_date': None}
+
+
 def filter_by_class(battles: List[Dict[str, str]], class_filter: List[str] = ['A','B']) -> List[Dict[str, str]]:
     """Filters battles by their CWSAC class.
     

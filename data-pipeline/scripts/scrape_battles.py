@@ -21,11 +21,19 @@ def main():
     cleaned_battles = wikipedia_battles.clean_battle_data(battles)
     print(f"✓ Cleaned {len(cleaned_battles)} battles")
     
-    # 4. Filter by class
+    # 4. Parse dates into structured start_date / end_date
+    for battle in cleaned_battles:
+        date_info = wikipedia_battles.parse_date_range(battle.get('Date', ''))
+        battle['start_date'] = date_info['start_date']
+        battle['end_date'] = date_info['end_date']
+    parsed_count = sum(1 for b in cleaned_battles if b['start_date'])
+    print(f"✓ Parsed dates for {parsed_count}/{len(cleaned_battles)} battles")
+    
+    # 5. Filter by class
     filtered_battles = wikipedia_battles.filter_by_class(cleaned_battles)
     print(f"✓ Filtered to {len(filtered_battles)} battles")
     
-    # 5. Save to JSON
+    # 6. Save to JSON
     # Get the directory where this script is located
     script_dir = Path(__file__).parent.parent  # Go up from scripts/ to data-pipeline/
     output_dir = script_dir / 'raw_data'

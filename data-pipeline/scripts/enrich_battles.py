@@ -161,8 +161,8 @@ def main():
         
         print(f"✓ Wikidata Enrichment Complete!")
         print(f"  Total battles: {len(enriched_battles)}")
-        print(f"  Complete enrichment (coords + dates): {complete_count}")
-        print(f"  Partial enrichment (Q-ID only): {partial_count}")
+        print(f"  Complete (coords found): {complete_count}")
+        print(f"  Partial (Q-ID but no coords): {partial_count}")
         print(f"  Wikipedia only (not on Wikidata): {wikipedia_only}")
     else:
         print("✗ Wikidata Enrichment Failed - check logs for details")

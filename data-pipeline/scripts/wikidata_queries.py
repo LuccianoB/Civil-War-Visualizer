@@ -96,7 +96,7 @@ def query_wikidata_sparql(sparql_query: str) -> Optional[Dict]:
 
 def find_battle_qid(battle_name: str) -> Optional[str]:
     """
-    Find a battle's Wikidata Q-ID by its name.
+    Find a battle's Wikidata Q-ID by its name using search API.
     
     Args:
         battle_name: The name of the battle (e.g., "Battle of Fort Sumter")
@@ -104,47 +104,36 @@ def find_battle_qid(battle_name: str) -> Optional[str]:
     Returns:
         The Q-ID (e.g., "Q543165") or None if not found
     """
-    # Escape the battle name for SPARQL (handle special characters)
-    escaped_name = battle_name.replace('"', '\\"')
-    
-    # Build the SPARQL query
-    sparql_query = f"""
-    PREFIX rdfs: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    
-    SELECT ?battle WHERE {{
-      ?battle rdfs:label "{escaped_name}"@en .
-    }}
-    LIMIT 1
-    """
-    
     logger.debug(f"Searching for battle: {battle_name}")
     
-    # Execute query
-    response = query_wikidata_sparql(sparql_query)
-    
-    if not response:
-        logger.warning(f"No response from Wikidata for: {battle_name}")
-        return None
-    
-    # Extract Q-ID from response
-    bindings = response.get('results', {}).get('bindings', [])
-    
-    if not bindings:
-        logger.warning(f"Battle not found on Wikidata: {battle_name}")
-        return None
-    
-    # Get the Q-ID from the first result
-    qid = bindings[0].get('battle', {}).get('value', '')
-    
-    # Extract just the Q-ID (remove the full URI)
-    # URI format: http://www.wikidata.org/entity/Q543165
-    if qid:
-        qid = qid.split('/')[-1]
+    try:
+        # Use Wikidata search API instead of SPARQL
+        search_url = "https://www.wikidata.org/w/api.php"
+        params = {
+            'action': 'wbsearchentities',
+            'search': battle_name,
+            'language': 'en',
+            'format': 'json'
+        }
+        
+        response = requests.get(search_url, params=params, headers=HEADERS, timeout=10)
+        response.raise_for_status()
+        
+        data = response.json()
+        results = data.get('search', [])
+        
+        if not results:
+            logger.warning(f"Battle not found on Wikidata: {battle_name}")
+            return None
+        
+        # Return the first result's Q-ID
+        qid = results[0].get('id')
         logger.info(f"Found Q-ID for '{battle_name}': {qid}")
         return qid
-    
-    logger.warning(f"Could not extract Q-ID for: {battle_name}")
-    return None
+        
+    except Exception as e:
+        logger.error(f"Error searching for battle: {e}")
+        return None
 
 def get_battle_data(qid: str) -> Dict:
     """
@@ -162,9 +151,9 @@ def get_battle_data(qid: str) -> Dict:
     PREFIX wdt: <http://www.wikidata.org/prop/direct/>
     
     SELECT ?coords ?startDate ?endDate WHERE {{
-      wd:{qid} wdt:P625 ?coords ;
-               wdt:P580 ?startDate ;
-               wdt:P582 ?endDate .
+      OPTIONAL {{ wd:{qid} wdt:P625 ?coords }}
+      OPTIONAL {{ wd:{qid} wdt:P580 ?startDate }}
+      OPTIONAL {{ wd:{qid} wdt:P582 ?endDate }}
     }}
     """
     

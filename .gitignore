@@ -4,9 +4,11 @@ __pycache__/
 *.pyc
 .DS_Store
 .idea/
+logs/
 *.log
 *.sqlite3
 *.env
+test*.py
 
 #data pipeline outputs
 data-pipeline/raw_data/

@@ -3,11 +3,12 @@ Wikidata Query Functions for Civil War Battle Enrichment
 Handles SPARQL queries to Wikidata API with error handling and retry logic.
 """
 
+import re
 import requests
 import json
 import time
 import logging
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -94,9 +95,88 @@ def query_wikidata_sparql(sparql_query: str) -> Optional[Dict]:
     return None
 
 
+# Keywords for filtering Wikidata search results
+_BAD_KEYWORDS = ['order of battle', 'disambiguation', 'wikimedia', 'print']
+_GOOD_KEYWORDS = ['battle', 'siege', 'civil war', 'military engagement']
+
+
+def _build_search_candidates(battle_name: str) -> List[str]:
+    """Generate cleaned search candidates from a Wikipedia battle name.
+    
+    Handles Wikipedia formatting quirks:
+      - Concatenated 'or': "Bull Runor First Manassas" → "Bull Run"
+      - Parenthetical alternates: "Monocacy(Battle of Monocacy Junction)"
+      - Year disambiguation: "Franklin (1864)" → "Franklin"
+    """
+    candidates = []
+
+    # Strategy 1: Split on concatenated "or" + capital letter
+    # e.g. "First Battle of Bull Runor First Manassas" → "First Battle of Bull Run"
+    # Negative lookbehind avoids matching "(or " inside parentheses
+    or_match = re.match(r'(.+?)(?<!\()or ([A-Z].+)', battle_name)
+    if or_match:
+        candidates.append(or_match.group(1).strip())
+
+    # Strategy 2: Strip all parenthetical text
+    # e.g. "Battle of Franklin (1864)" → "Battle of Franklin"
+    stripped = re.sub(r'\s*\(.*?\)', '', battle_name).strip()
+    if stripped and stripped != battle_name:
+        candidates.append(stripped)
+
+    # Strategy 3: Try alternate names from inside parentheses
+    # e.g. "(Battle of Monocacy Junction)" → "Battle of Monocacy Junction"
+    for content in re.findall(r'\(([^)]+)\)', battle_name):
+        # Skip pure years like "(1864)"
+        if re.match(r'^\d{4}$', content.strip()):
+            continue
+        # Strip leading "or ": "(or Sailor's Creek)" → "Sailor's Creek"
+        alt = re.sub(r'^or\s+', '', content.strip())
+        if alt:
+            candidates.append(alt)
+
+    # Strategy 4: Raw name as fallback
+    candidates.append(battle_name)
+
+    # Deduplicate while preserving order
+    seen = set()
+    unique = []
+    for c in candidates:
+        if c not in seen:
+            seen.add(c)
+            unique.append(c)
+    return unique
+
+
+def _pick_best_result(results: list) -> Optional[str]:
+    """Pick the best Wikidata entity from search results.
+    
+    Prefers results whose description indicates an actual battle;
+    skips 'order of battle', disambiguation pages, etc.
+    """
+    # First pass: good description keywords, no bad ones
+    for r in results:
+        desc = r.get('description', '').lower()
+        if any(bad in desc for bad in _BAD_KEYWORDS):
+            continue
+        if any(good in desc for good in _GOOD_KEYWORDS):
+            return r.get('id')
+
+    # Second pass: first result without bad keywords
+    for r in results:
+        desc = r.get('description', '').lower()
+        if not any(bad in desc for bad in _BAD_KEYWORDS):
+            return r.get('id')
+
+    return None
+
+
 def find_battle_qid(battle_name: str) -> Optional[str]:
     """
     Find a battle's Wikidata Q-ID by its name using search API.
+    
+    Generates multiple search candidates to handle Wikipedia formatting
+    quirks (concatenated alternate names, parenthetical text), and filters
+    results to prefer actual battle entities.
     
     Args:
         battle_name: The name of the battle (e.g., "Battle of Fort Sumter")
@@ -104,36 +184,44 @@ def find_battle_qid(battle_name: str) -> Optional[str]:
     Returns:
         The Q-ID (e.g., "Q543165") or None if not found
     """
-    logger.debug(f"Searching for battle: {battle_name}")
-    
-    try:
-        # Use Wikidata search API instead of SPARQL
-        search_url = "https://www.wikidata.org/w/api.php"
-        params = {
-            'action': 'wbsearchentities',
-            'search': battle_name,
-            'language': 'en',
-            'format': 'json'
-        }
-        
-        response = requests.get(search_url, params=params, headers=HEADERS, timeout=10)
-        response.raise_for_status()
-        
-        data = response.json()
-        results = data.get('search', [])
-        
-        if not results:
-            logger.warning(f"Battle not found on Wikidata: {battle_name}")
-            return None
-        
-        # Return the first result's Q-ID
-        qid = results[0].get('id')
-        logger.info(f"Found Q-ID for '{battle_name}': {qid}")
-        return qid
-        
-    except Exception as e:
-        logger.error(f"Error searching for battle: {e}")
-        return None
+    candidates = _build_search_candidates(battle_name)
+    logger.debug(f"Search candidates for '{battle_name}': {candidates}")
+
+    for candidate in candidates:
+        try:
+            time.sleep(QUERY_DELAY)
+
+            search_url = "https://www.wikidata.org/w/api.php"
+            params = {
+                'action': 'wbsearchentities',
+                'search': candidate,
+                'language': 'en',
+                'format': 'json',
+                'limit': 5
+            }
+
+            response = requests.get(search_url, params=params, headers=HEADERS, timeout=10)
+            response.raise_for_status()
+
+            data = response.json()
+            results = data.get('search', [])
+
+            if not results:
+                logger.debug(f"No results for candidate: '{candidate}'")
+                continue
+
+            # Pick the best result (prefer actual battle entities)
+            qid = _pick_best_result(results)
+            if qid:
+                logger.info(f"Found Q-ID for '{battle_name}': {qid}")
+                return qid
+
+        except Exception as e:
+            logger.error(f"Error searching for '{candidate}': {e}")
+            continue
+
+    logger.warning(f"Battle not found on Wikidata: {battle_name}")
+    return None
 
 def get_battle_data(qid: str) -> Dict:
     """

@@ -182,6 +182,47 @@ def _pick_best_result(results: list) -> Optional[str]:
 
     return None
 
+def _lookup_by_sitelink(battle_name: str) -> Optional[str]:
+    """Lookup a battle's Q-ID by its Wikipedia sitelink.
+    
+    This is a fallback method when the search API doesn't yield good results.
+    It checks if there's a Wikidata item with a sitelink to the given Wikipedia page.
+    
+    Args:
+        battle_name: The name of the battle (e.g., "Battle of Fort Sumter")
+        
+    Returns:
+        The Q-ID (e.g., "Q543165") or None if not found
+    """
+    # Format the battle name for Wikipedia URL (replace spaces with underscores)
+    wiki_title = battle_name.replace(' ', '_')
+    
+    try:
+        time.sleep(QUERY_DELAY)  # Respectful delay before API call
+        sitelink_search_url = "https://www.wikidata.org/w/api.php"
+        params = {
+            'action': 'wbgetentities',
+            'sites': 'enwiki',
+            'titles': wiki_title,
+            'format': 'json'
+        }
+
+        response = requests.get(sitelink_search_url, params=params, headers=HEADERS, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        entities = data.get('entities', {})
+        for qid, entity in entities.items():
+            if qid.startswith('Q') and 'missing' not in entity:  # Entity exists
+                logger.info(f"Found Q-ID by sitelink for '{battle_name}': {qid}")
+                return qid
+            else:
+                logger.debug(f"No Wikidata item with sitelink for '{battle_name}'")
+        return None
+    except Exception as e:
+        logger.error(f"Error during sitelink lookup for '{battle_name}': {e}")
+        return None
+
+
 
 def find_battle_qid(battle_name: str) -> Optional[str]:
     """
@@ -232,6 +273,12 @@ def find_battle_qid(battle_name: str) -> Optional[str]:
         except Exception as e:
             logger.error(f"Error searching for '{candidate}': {e}")
             continue
+
+    # Final fallback: try lookup by sitelink
+    logger.debug(f"Trying sitelink lookup for '{battle_name}' as final fallback")
+    qid = _lookup_by_sitelink(battle_name)
+    if qid:
+        return qid
 
     logger.warning(f"Battle not found on Wikidata: {battle_name}")
     return None

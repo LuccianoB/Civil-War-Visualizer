@@ -129,7 +129,7 @@ def save_enriched_battles(battles: List[Dict]) -> bool:
 
 
 def main():
-    """Main orchestration function for Step 1B."""
+    """Main orchestration function for Wikidata enrichment."""
     logger.info("=" * 60)
     logger.info("Starting Wikidata Enrichment")
     logger.info("=" * 60)

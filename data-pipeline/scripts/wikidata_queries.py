@@ -134,7 +134,20 @@ def _build_search_candidates(battle_name: str) -> List[str]:
         if alt:
             candidates.append(alt)
 
-    # Strategy 4: Raw name as fallback
+    # Strategy 4:Add variation with spaces before internal capitals (e.g., DeRussy -> De Russy)
+    spaced_name = re.sub(r'([a-z])([A-Z])', r'\1 \2', battle_name)
+    if spaced_name != battle_name and spaced_name not in candidates:
+        candidates.append(spaced_name)
+    
+    # Apply same spacing fix to all existing candidates
+    new_candidates = []
+    for candidate in candidates[:]:
+        spaced = re.sub(r'([a-z])([A-Z])', r'\1 \2', candidate)
+        if spaced != candidate and spaced not in candidates and spaced not in new_candidates:
+            new_candidates.append(spaced)
+    candidates.extend(new_candidates)
+
+    # Strategy 5: Raw name as fallback
     candidates.append(battle_name)
 
     # Deduplicate while preserving order

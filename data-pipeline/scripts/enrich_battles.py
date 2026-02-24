@@ -68,6 +68,7 @@ def enrich_all_battles(battles: List[Dict]) -> List[Dict]:
     
     for i, battle in enumerate(battles, 1):
         battle_name = battle.get('Battle', 'Unknown')
+        wikipedia_article = battle.get('Wikipedia Article', None)
         
         # Progress tracking
         print(f"Processing battle {i}/{total}: {battle_name}...")
@@ -75,7 +76,7 @@ def enrich_all_battles(battles: List[Dict]) -> List[Dict]:
         
         try:
             # Step 1: Find Q-ID
-            qid = wikidata_queries.find_battle_qid(battle_name)
+            qid = wikidata_queries.find_battle_qid(battle_name, wikipedia_article)
             
             if not qid:
                 # Battle not found on Wikidata - keep baseline data only

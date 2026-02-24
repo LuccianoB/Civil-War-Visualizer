@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 import re 
 from typing import List, Dict
 import logging
+import urllib.parse
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -80,6 +81,16 @@ def parse_CWSAC_from_table(html: str) -> List[Dict[str, str]]:
         
         for header, cell in zip(headers, cells):
             battle_info[header] = cell.get_text(strip=True)
+            #extract links if present
+            if header == 'Battle':
+                link = cell.find('a')
+                if link and link.get('href', '').startswith('/wiki/'):
+                    article_title = link.get('href')[len('/wiki/'):]
+                    article_title = urllib.parse.unquote(article_title)  # Decode URL-encoded characters
+                    battle_info['Wikipedia_Link'] = article_title
+                else:
+                    #Fallback: use battle name as link title (not ideal but better than nothing)
+                    battle_info['Wikipedia_Link'] = battle_info[header].replace(' ', '_')
         
         battle_data.append(battle_info)
     

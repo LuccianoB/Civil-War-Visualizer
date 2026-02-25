@@ -11,7 +11,7 @@ import logging
 from typing import Dict, List, Optional
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+
 logger = logging.getLogger(__name__)
 
 # Wikidata SPARQL endpoint
@@ -273,13 +273,27 @@ def find_battle_qid(battle_name: str, wikipedia_article: Optional[str] = None) -
             logger.error(f"Error searching for '{candidate}': {e}")
             continue
 
-    # Final fallback: try lookup by sitelink
+    # Enhanced fallback: try sitelink lookup for scraped article title and all candidates
+    tried_titles = set()
+    # Try the scraped article title first (if present)
     if wikipedia_article:
-        logger.debug(f"Trying sitelink lookup for '{wikipedia_article}' as final fallback")
+        tried_titles.add(wikipedia_article)
+        logger.debug(f"Trying sitelink lookup for scraped article title '{wikipedia_article}' as fallback")
         qid = _lookup_by_sitelink(wikipedia_article)
         if qid:
             return qid
-
+    # Try all candidate names as sitelink titles (with underscores and URL-decoded)
+    import urllib.parse
+    for candidate in candidates:
+        candidate_title = candidate.replace(' ', '_')
+        candidate_title = urllib.parse.unquote(candidate_title)
+        if candidate_title in tried_titles:
+            continue
+        tried_titles.add(candidate_title)
+        logger.debug(f"Trying sitelink lookup for candidate title '{candidate_title}' as fallback")
+        qid = _lookup_by_sitelink(candidate_title)
+        if qid:
+            return qid
     logger.warning(f"Battle not found on Wikidata: {battle_name}")
     return None
 

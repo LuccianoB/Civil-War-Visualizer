@@ -86,7 +86,6 @@ def parse_CWSAC_from_table(html: str) -> List[Dict[str, str]]:
                 link = cell.find('a')
                 if link and link.get('href', '').startswith('/wiki/'):
                     article_title = link.get('href')[len('/wiki/'):]
-                    article_title = urllib.parse.unquote(article_title)  # Decode URL-encoded characters
                     battle_info['Wikipedia_Link'] = article_title
                 else:
                     #Fallback: use battle name as link title (not ideal but better than nothing)

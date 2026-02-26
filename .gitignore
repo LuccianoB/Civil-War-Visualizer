@@ -9,6 +9,7 @@ logs/
 *.sqlite3
 *.env
 test*.py
+debug*.py
 
 #data pipeline outputs
 data-pipeline/raw_data/

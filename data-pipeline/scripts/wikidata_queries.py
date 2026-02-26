@@ -8,6 +8,7 @@ import requests
 import json
 import time
 import logging
+import urllib.parse
 from typing import Dict, List, Optional
 
 # Configure logging
@@ -96,8 +97,23 @@ def query_wikidata_sparql(sparql_query: str) -> Optional[Dict]:
 
 
 # Keywords for filtering Wikidata search results
-_BAD_KEYWORDS = ['order of battle', 'disambiguation', 'wikimedia', 'print']
-_GOOD_KEYWORDS = ['battle', 'siege', 'civil war', 'military engagement']
+_BAD_KEYWORDS = ['order of battle', 'disambiguation', 'wikimedia', 'print', 'given name', 'family name', 'female given name', 'male given name', 'video game', 'war-game', 'war game', 'politician', 'painter']
+_GOOD_KEYWORDS = ['battle', 'siege', 'civil war', 'military engagement', 'military operation', 'military campaign', 'skirmish', 'raid', 'american civil war', 'engagement', 'bombardment']
+
+# Common abbreviation map for Civil War battle names
+_ABBREV_MAP = {
+    'Ft.': 'Fort',
+    'Mt.': 'Mount',
+    'St.': 'Saint',
+    'Pt.': 'Point',
+    'Is.': 'Island',
+    'Ops.': 'Operations'
+}
+_ABBREV_PATTERN = r'\b(' + '|'.join(re.escape(k) for k in _ABBREV_MAP.keys()) + r')(?=\b|$)'
+
+def _expand_abbreviations(text: str) -> str:
+    """Expand common abbreviations in a battle name string."""
+    return re.sub(_ABBREV_PATTERN, lambda m: _ABBREV_MAP.get(m.group(0), m.group(0)), text)
 
 
 def _build_search_candidates(battle_name: str) -> List[str]:
@@ -107,6 +123,11 @@ def _build_search_candidates(battle_name: str) -> List[str]:
       - Concatenated 'or': "Bull Runor First Manassas" → "Bull Run"
       - Parenthetical alternates: "Monocacy(Battle of Monocacy Junction)"
       - Year disambiguation: "Franklin (1864)" → "Franklin"
+      - Internal capitals: "DeRussy" → "De Russy"
+      - Strips parenthetical text for a cleaner name: "Battle of Franklin (1864)" → "Battle of Franklin"
+      - Expands abreviations: "Ft. Sumter" → "Fort Sumter"
+      - Removes leading 'Battle of', 'Siege of', etc. for a more concise search term: "Battle of Gettysburg" → "Gettysburg"
+      - Removes possessives for a more general search term: "Battle of Sailor's Creek" → "Battle of Sailors Creek"
     """
     candidates = []
 
@@ -138,7 +159,23 @@ def _build_search_candidates(battle_name: str) -> List[str]:
     spaced_name = re.sub(r'([a-z])([A-Z])', r'\1 \2', battle_name)
     if spaced_name != battle_name and spaced_name not in candidates:
         candidates.append(spaced_name)
-    
+
+    # Strategy 5: Expand common abbreviations (e.g., Ft. → Fort) for all candidates
+    expanded_candidates = []
+    for candidate in [battle_name] + candidates:
+        expanded = _expand_abbreviations(candidate)
+        if expanded != candidate and expanded not in candidates and expanded not in expanded_candidates:
+            expanded_candidates.append(expanded)
+    candidates.extend(expanded_candidates)
+
+    # Strategy 6: For every candidate, add a version with all apostrophes removed (e.g., Brice's → Brices)
+    apostrophe_variants = []
+    for candidate in candidates[:]:
+        no_apostrophes = candidate.replace("'", "")
+        if no_apostrophes != candidate and no_apostrophes not in candidates and no_apostrophes not in apostrophe_variants:
+            apostrophe_variants.append(no_apostrophes)
+    candidates.extend(apostrophe_variants)
+
     # Apply same spacing fix to all existing candidates
     new_candidates = []
     for candidate in candidates[:]:
@@ -147,7 +184,7 @@ def _build_search_candidates(battle_name: str) -> List[str]:
             new_candidates.append(spaced)
     candidates.extend(new_candidates)
 
-    # Strategy 5: Raw name as fallback
+    # Strategy 7: Raw name as fallback
     candidates.append(battle_name)
 
     # Deduplicate while preserving order
@@ -163,21 +200,15 @@ def _build_search_candidates(battle_name: str) -> List[str]:
 def _pick_best_result(results: list) -> Optional[str]:
     """Pick the best Wikidata entity from search results.
     
-    Prefers results whose description indicates an actual battle;
-    skips 'order of battle', disambiguation pages, etc.
+    Only accepts results whose description indicates an actual battle/military event;
+    skips 'order of battle', disambiguation pages, given names, video games, etc.
     """
-    # First pass: good description keywords, no bad ones
+    # Only accept results with good description keywords and no bad ones
     for r in results:
         desc = r.get('description', '').lower()
         if any(bad in desc for bad in _BAD_KEYWORDS):
             continue
         if any(good in desc for good in _GOOD_KEYWORDS):
-            return r.get('id')
-
-    # Second pass: first result without bad keywords
-    for r in results:
-        desc = r.get('description', '').lower()
-        if not any(bad in desc for bad in _BAD_KEYWORDS):
             return r.get('id')
 
     return None
@@ -221,6 +252,30 @@ def _lookup_by_sitelink(article_title: str) -> Optional[str]:
         return None
 
 
+def _try_sitelink_candidates(sitelink_candidates: List[str], tried_titles: set) -> Optional[str]:
+    """Try sitelink lookup for each candidate, converting spaces to underscores.
+    
+    Args:
+        sitelink_candidates: List of battle name candidates to try
+        tried_titles: Set of titles already attempted (to avoid duplicates)
+        
+    Returns:
+        The Q-ID if found, or None if no match
+    """
+    for candidate in sitelink_candidates:
+        candidate_title = candidate.replace(' ', '_')
+        candidate_title = urllib.parse.unquote(candidate_title)
+        if candidate_title in tried_titles:
+            continue
+        tried_titles.add(candidate_title)
+        print(f"[DEBUG] Trying sitelink lookup for candidate title: '{candidate_title}'")
+        logger.debug(f"Trying sitelink lookup for candidate title '{candidate_title}' as fallback")
+        qid = _lookup_by_sitelink(candidate_title)
+        if qid:
+            return qid
+    return None
+
+
 
 def find_battle_qid(battle_name: str, wikipedia_article: Optional[str] = None) -> Optional[str]:
     """
@@ -240,7 +295,10 @@ def find_battle_qid(battle_name: str, wikipedia_article: Optional[str] = None) -
     candidates = _build_search_candidates(battle_name)
     logger.debug(f"Search candidates for '{battle_name}': {candidates}")
 
+    print(f"[DEBUG] Candidates for '{battle_name}': {candidates}")
+
     for candidate in candidates:
+        print(f"[DEBUG] Trying name candidate: '{candidate}'")
         try:
             time.sleep(QUERY_DELAY)
 
@@ -278,22 +336,26 @@ def find_battle_qid(battle_name: str, wikipedia_article: Optional[str] = None) -
     # Try the scraped article title first (if present)
     if wikipedia_article:
         tried_titles.add(wikipedia_article)
+        print(f"[DEBUG] Trying sitelink lookup for scraped article title: '{wikipedia_article}'")
         logger.debug(f"Trying sitelink lookup for scraped article title '{wikipedia_article}' as fallback")
         qid = _lookup_by_sitelink(wikipedia_article)
         if qid:
             return qid
-    # Try all candidate names as sitelink titles (with underscores and URL-decoded)
-    import urllib.parse
-    for candidate in candidates:
-        candidate_title = candidate.replace(' ', '_')
-        candidate_title = urllib.parse.unquote(candidate_title)
-        if candidate_title in tried_titles:
-            continue
-        tried_titles.add(candidate_title)
-        logger.debug(f"Trying sitelink lookup for candidate title '{candidate_title}' as fallback")
-        qid = _lookup_by_sitelink(candidate_title)
-        if qid:
-            return qid
+    
+    # Build sitelink candidates: base candidates + stripped-leading variants + abbreviation expansions
+    sitelink_candidates = list(candidates)
+    stripped_leading = re.sub(r'^(Battle|Siege|Skirmish|Engagement|Action|Raid|Capture|Occupation|Bombardment|Attack|Defense|Expedition|Affair|Operations|Campaign) of ', '', battle_name, flags=re.IGNORECASE)
+    if stripped_leading != battle_name and stripped_leading not in sitelink_candidates:
+        sitelink_candidates.append(stripped_leading)
+        # Expand abbreviations only on the newly generated candidate (e.g., "Manassas Station Ops." → "Manassas Station Operations")
+        expanded = _expand_abbreviations(stripped_leading)
+        if expanded != stripped_leading and expanded not in sitelink_candidates:
+            sitelink_candidates.append(expanded)
+    
+    # Try all sitelink candidates
+    qid = _try_sitelink_candidates(sitelink_candidates, tried_titles)
+    if qid:
+        return qid
     logger.warning(f"Battle not found on Wikidata: {battle_name}")
     return None
 

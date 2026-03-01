@@ -1,0 +1,21 @@
+{
+  "name": "civil-war-visualizer",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^2.4.6",
+    "vite": "^5.0.8"
+  },
+  "dependencies": {
+    "maplibre-gl": "^4.1.3",
+    "svelte": "^4.2.18",
+    "svelte-maplibre": "^0.0.30"
+  }
+}

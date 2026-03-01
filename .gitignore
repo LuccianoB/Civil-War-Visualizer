@@ -15,5 +15,13 @@ debug*.py
 data-pipeline/raw_data/
 data-pipeline/processed_data/
 
+#frontend build outputs
+frontend/dist/
+frontend/node_modules/
 
-    
+#frontend environment
+frontend/.env.local
+frontend/.env.*.local
+
+
+

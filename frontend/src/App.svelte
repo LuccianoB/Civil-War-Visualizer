@@ -1,6 +1,7 @@
 <script>
 import Map from './lib/components/Map.svelte';
 import battleData from './lib/data/enriched_battles.json';
+import TimelineSlider from './lib/components/TimelineSlider.svelte';
 
 let currentDate = $state('1861-04-12'); // Default to the start of the Civil War
 
@@ -19,10 +20,7 @@ let filteredBattles = $derived(
     </header>
 
     <div class="bg-white border-b border-grey-200 p-4 shadow-sm">
-        <div class="max-w-6xl mx-auto">
-            <!-- Timeline slider will go here ---->
-            <p class="text-gray-600 text-sm">Timeline slider coming soon...</p>
-        </div>
+            <TimelineSlider bind:currentDate />
     </div>
     <div class="flex-1">
         <Map battles={filteredBattles} />

@@ -25,14 +25,16 @@
 </script>
 
 <div class="flex flex-col items-center justify-center w-full p-4">
-    <input class ="w-full"
+    <div>
+        <p class="mb-3 text-lg font-semibold">
+            {new Date(sliderValue).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
+    </div>
+    <input class ="w-full ml-5 mr-5"
         type="range"
         min={minTimestamp} 
         max={maxTimestamp} 
         step={24 * 60 * 60 * 1000}
         bind:value={sliderValue}
     />
-    <p class="mt-2 text-lg font-semibold">
-        {new Date(sliderValue).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-    </p>
 </div>

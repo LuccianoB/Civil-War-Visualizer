@@ -1,1 +1,11 @@
 @import "tailwindcss";
+:root {
+    --control-bar-icon-size: 50px;
+
+    --sidebar-background: #d2dcec;
+    --sidebar-icon: #111827;
+    --sidebar-deep-background: #95a7c5;
+    --sidebar-background-dark: #111827;
+    --sidebar-icon-dark: #d2dcec;
+    --sidebar-deep-background-dark: #1f2937;
+}

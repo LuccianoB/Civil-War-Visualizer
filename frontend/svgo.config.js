@@ -2,11 +2,10 @@ export default {
   plugins: [
     {
       name: 'preset-default',
-      params: {
-        overrides: {
-          removeViewBox: false,
-        },
-      },
+    },
+    {
+      name: 'removeViewBox',
+      active: true,
     },
   ],
 };

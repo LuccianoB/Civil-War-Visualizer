@@ -53,9 +53,19 @@
         opacity: 1;
     }
 
-    /* Icon color */
+    /* Icon styling */
     .controlbar-button :global(svg) {
         fill: var(--sidebar-icon);
+        display: inline-block;
+        vertical-align: middle;
+        width: var(--control-bar-icon-size);
+        height: var(--control-bar-icon-size);
+        transition: fill 0.2s ease-in-out;
+    }
+
+    /* Icon color on active state */
+    .controlbar-button.active :global(svg) {
+        fill: var(--sidebar-icon-active);
     }
 
     /* Active icon color */

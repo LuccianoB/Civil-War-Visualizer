@@ -21,7 +21,7 @@
 
 
 <MapLibre
-    class="w-full h-[80vh]"
+    class="w-full h-full"
     style={style}
     center={[-77, 37]}
     zoom={5}

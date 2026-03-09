@@ -31,6 +31,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: 0.25rem;
     }
 
     .bg {

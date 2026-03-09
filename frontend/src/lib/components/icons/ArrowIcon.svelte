@@ -1,3 +1,7 @@
-<svg viewBox="0 0 16 25" xmlns="http://www.w3.org/2000/svg">
+<script>
+  export let rotate = 0;
+</script>
+
+<svg viewBox="0 0 16 25" xmlns="http://www.w3.org/2000/svg" style="transform: rotate({rotate}deg);">
 <path d="M15.4375 22.0625L5.89583 12.5L15.4375 2.9375L12.5 0L-9.53674e-07 12.5L12.5 25L15.4375 22.0625Z"/>
 </svg>

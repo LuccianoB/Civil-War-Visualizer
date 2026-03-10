@@ -1,9 +1,11 @@
 <script>
     import ControlbarButton from './ControlbarButton.svelte';
+    import TimelineSliderDropdown from './TimelineSliderDropdown.svelte';
     import { KeyIcon, CalendarIcon, LogoIcon, DoublearrowIcon, ArrowIcon, ClockArrowDownIcon, MapsettingsIcon, PlaybuttonIcon, PausebuttonIcon, InfoIcon } from '$lib/components/icons';
     import { currentDate } from '$lib/store';
     
     let playbackSpeed = "1";
+    let timelineOpen = $state(false);
 
     function addDays(date, days) {
         const result = new Date(date);
@@ -69,13 +71,16 @@
                 <DoublearrowIcon slot="icon" />
             </ControlbarButton>
         </div>
-        <ControlbarButton ariaLabel="Timeline-toggle" toggleable={true}>
+        <ControlbarButton ariaLabel="Timeline-toggle" toggleable={true} onClick={() => { timelineOpen = !timelineOpen; }}>
             <ClockArrowDownIcon slot="icon" />
         </ControlbarButton>
         <ControlbarButton ariaLabel="Select Date by Calendar" toggleable={true}>
             <CalendarIcon slot="icon"/>
         </ControlbarButton>
     </div>
+    {#if timelineOpen}
+        <TimelineSliderDropdown />
+    {/if}
 </div>
 
 <style>

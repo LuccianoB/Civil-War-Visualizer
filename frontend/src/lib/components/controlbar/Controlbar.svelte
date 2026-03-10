@@ -1,22 +1,23 @@
 <script>
     import ControlbarButton from './ControlbarButton.svelte';
-    import { KeyIcon, CalendarIcon, LogoIcon, DoublearrowIcon, ArrowIcon, DownArrow, MapsettingsIcon, PlaybuttonIcon, PausebuttonIcon, InfoIcon } from '$lib/components/icons';
+    import { KeyIcon, CalendarIcon, LogoIcon, DoublearrowIcon, ArrowIcon, ClockArrowDownIcon, MapsettingsIcon, PlaybuttonIcon, PausebuttonIcon, InfoIcon } from '$lib/components/icons';
     let playbackSpeed = "1";
+    import { currentDate } from '$lib/store';
 </script>
 
 <div class="controlbar">
     <div class="upper_controlbar">
         <div>
-            <LogoIcon width="3rem" height="3rem" />
+            <LogoIcon width="2.5rem" height="2.5rem" />
         </div>
         <div class="top-right-buttons">
-            <ControlbarButton ariaLabel="Key">
+            <ControlbarButton ariaLabel="Key" toggleable={true}>
                 <KeyIcon slot="icon" />
             </ControlbarButton>
-            <ControlbarButton ariaLabel="Map Settings">
+            <ControlbarButton ariaLabel="Map Settings" toggleable={true}>
                 <MapsettingsIcon slot="icon" />
             </ControlbarButton>
-            <ControlbarButton ariaLabel="Info">
+            <ControlbarButton ariaLabel="Info" toggleable={true}>
                 <InfoIcon slot="icon" />
             </ControlbarButton>
         </div>
@@ -35,18 +36,22 @@
             <ControlbarButton ariaLabel="Previous Day">
                 <ArrowIcon slot="icon" />
             </ControlbarButton>
-            <div>06-02-1864</div>
+            <div ariaLabel="selected Date" class="selected-date">
+                {$currentDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+            </div>
             <ControlbarButton ariaLabel="Next Day">
                 <ArrowIcon slot="icon" rotate={180} />
             </ControlbarButton>
             <ControlbarButton ariaLabel="Next Month">
                 <DoublearrowIcon slot="icon" rotate={180} />
             </ControlbarButton>
-
-
-                
-
         </div>
+        <ControlbarButton ariaLabel="Timeline-toggle" toggleable={true}>
+            <ClockArrowDownIcon slot="icon" />
+        </ControlbarButton>
+        <ControlbarButton ariaLabel="Select Date by Calendar" toggleable={true}>
+            <CalendarIcon slot="icon"/>
+        </ControlbarButton>
     </div>
 </div>
 
@@ -67,7 +72,18 @@
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
-        padding: 0.2rem 1.5rem;
+        padding: 0.2rem 0.5rem;
+    }
+
+    .upper_controlbar {
+        border-bottom: 1px solid var(--sidebar-deep-background);
+    }
+
+    .lower_controlbar {
+        border-top: 1px solid var(--sidebar-deep-background);
+        --control-bar-icon-size: var(--control-lower-bar-icon-size);
+        padding-top: 0.3rem;
+        gap: 0.5rem;
     }
 
     .top-right-buttons {
@@ -79,7 +95,14 @@
     .date-management-control {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        margin-inline: 0.5rem;
+    }
+
+    .selected-date {
+        margin: 0 0.5rem;
+        color: var(--sidebar-icon);
+        font-size: 1.25rem;
+        font-weight: bold;
     }
 
     .playback-speed {

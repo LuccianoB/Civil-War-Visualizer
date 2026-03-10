@@ -32,6 +32,7 @@
         align-items: center;
         justify-content: center;
         padding: 0.25rem;
+        color: var(--sidebar-icon);
     }
 
     .bg {
@@ -41,6 +42,7 @@
         border-radius: 10px;
         opacity: 0;
         transition: opacity 0.2s ease-in-out;
+        z-index: -1;
     }
 
     /* Hover background*/
@@ -54,23 +56,19 @@
         opacity: 1;
     }
 
+    .controlbar-button.active {
+        color: var(--sidebar-background);
+    }
+
+    .controlbar-button.active :global(.material-symbols-outlined) {
+        color: var(--sidebar-background);
+    }
+
     /* Icon styling */
-    .controlbar-button :global(svg) {
-        fill: var(--sidebar-icon);
-        display: inline-block;
-        vertical-align: middle;
+    .controlbar-button :global(.material-symbols-outlined) {
         width: var(--control-bar-icon-size);
         height: var(--control-bar-icon-size);
-        transition: fill 0.2s ease-in-out;
-    }
-
-    /* Icon color on active state */
-    .controlbar-button.active :global(svg) {
-        fill: var(--sidebar-icon-active);
-    }
-
-    /* Active icon color */
-    .controlbar-button.active :global(svg) {
-        fill: var(--sidebar-background);
+        transition: color 0.2s ease-in-out;
+        color: inherit;
     }
 </style>

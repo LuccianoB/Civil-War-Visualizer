@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 42 46">
+<span class="material-symbols-outlined">calendar_month</span>
 
-<path d="M37.5 4.16667H35.4167V0H31.25V4.16667H10.4167V0H6.25V4.16667H4.16667C1.875 4.16667 0 6.04167 0 8.33333V41.6667C0 43.9583 1.875 45.8333 4.16667 45.8333H37.5C39.7917 45.8333 41.6667 43.9583 41.6667 41.6667V8.33333C41.6667 6.04167 39.7917 4.16667 37.5 4.16667ZM37.5 41.6667H4.16667V18.75H37.5V41.6667ZM37.5 14.5833H4.16667V8.33333H37.5V14.5833Z"/>
-
-</svg>
+<style>
+  span {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+</style>

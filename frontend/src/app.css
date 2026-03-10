@@ -1,6 +1,7 @@
 @import "tailwindcss";
 :root {
     --control-bar-icon-size: 2rem;
+    --control-lower-bar-icon-size: 1.5rem;
 
     --sidebar-background: #d2dcec;
     --sidebar-icon: #111827;

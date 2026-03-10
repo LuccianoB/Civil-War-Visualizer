@@ -1,3 +1,7 @@
-<svg viewBox="0 0 23 30" xmlns="http://www.w3.org/2000/svg" fill="var(--sidebar-icon)">
-<path d="M4.16667 7.58333L15.1458 14.5833L4.16667 21.5833V7.58333ZM0 0V29.1667L22.9167 14.5833L0 0Z"/>
-</svg>
+<span class="material-symbols-outlined">play_arrow</span>
+
+<style>
+  span {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+</style>

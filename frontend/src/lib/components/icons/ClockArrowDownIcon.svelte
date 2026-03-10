@@ -1,4 +1,4 @@
-<span class="material-symbols-outlined">chevron_forward</span>
+<span class="material-symbols-outlined">clock_arrow_down</span>
 
 <style>
   span {

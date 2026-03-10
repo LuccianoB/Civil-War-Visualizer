@@ -2,13 +2,15 @@
 import Map from './lib/components/Map.svelte';
 import battleData from './lib/data/enriched_battles.json';
 import Controlbar from './lib/components/controlbar/Controlbar.svelte';
+import { currentDate } from './lib/store.js';
 
-let currentDate = $state('1861-04-12'); // Default to the start of the Civil War
+// Convert Date to YYYY-MM-DD string for filtering
+let currentDateString = $derived($currentDate.toISOString().split('T')[0]);
 
 let filteredBattles = $derived(
     battleData.filter(b =>
-        b.start_date <= currentDate && 
-        b.end_date >= currentDate
+        b.start_date <= currentDateString && 
+        b.end_date >= currentDateString
     )
 )
 </script>

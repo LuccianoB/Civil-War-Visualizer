@@ -1,8 +1,31 @@
 <script>
     import ControlbarButton from './ControlbarButton.svelte';
     import { KeyIcon, CalendarIcon, LogoIcon, DoublearrowIcon, ArrowIcon, ClockArrowDownIcon, MapsettingsIcon, PlaybuttonIcon, PausebuttonIcon, InfoIcon } from '$lib/components/icons';
-    let playbackSpeed = "1";
     import { currentDate } from '$lib/store';
+    
+    let playbackSpeed = "1";
+
+    function addDays(date, days) {
+        const result = new Date(date);
+        result.setDate(result.getDate() + days);
+        return result;
+    }
+
+    function previousDay() {
+        currentDate.set(addDays($currentDate, -1));
+    }
+
+    function nextDay() {
+        currentDate.set(addDays($currentDate, 1));
+    }
+
+    function previousMonth() {
+        currentDate.set(addDays($currentDate, -30));
+    }
+
+    function nextMonth() {
+        currentDate.set(addDays($currentDate, 30));
+    }
 </script>
 
 <div class="controlbar">
@@ -30,19 +53,19 @@
             <span slot="icon" class="playback-speed">{playbackSpeed}x</span>
         </ControlbarButton>
         <div class="date-management-control">
-            <ControlbarButton ariaLabel="Previous Month">
+            <ControlbarButton ariaLabel="Previous Month" onClick={previousMonth}>
                 <DoublearrowIcon slot="icon" rotate={180} />
             </ControlbarButton>
-            <ControlbarButton ariaLabel="Previous Day">
+            <ControlbarButton ariaLabel="Previous Day" onClick={previousDay}>
                 <ArrowIcon slot="icon" rotate={180} />
             </ControlbarButton>
             <div ariaLabel="selected Date" class="selected-date">
                 {$currentDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
             </div>
-            <ControlbarButton ariaLabel="Next Day">
+            <ControlbarButton ariaLabel="Next Day" onClick={nextDay}>
                 <ArrowIcon slot="icon" />
             </ControlbarButton>
-            <ControlbarButton ariaLabel="Next Month">
+            <ControlbarButton ariaLabel="Next Month" onClick={nextMonth}>
                 <DoublearrowIcon slot="icon" />
             </ControlbarButton>
         </div>

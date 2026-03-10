@@ -31,19 +31,19 @@
         </ControlbarButton>
         <div class="date-management-control">
             <ControlbarButton ariaLabel="Previous Month">
-                <DoublearrowIcon slot="icon" />
+                <DoublearrowIcon slot="icon" rotate={180} />
             </ControlbarButton>
             <ControlbarButton ariaLabel="Previous Day">
-                <ArrowIcon slot="icon" />
+                <ArrowIcon slot="icon" rotate={180} />
             </ControlbarButton>
             <div ariaLabel="selected Date" class="selected-date">
                 {$currentDate.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
             </div>
             <ControlbarButton ariaLabel="Next Day">
-                <ArrowIcon slot="icon" rotate={180} />
+                <ArrowIcon slot="icon" />
             </ControlbarButton>
             <ControlbarButton ariaLabel="Next Month">
-                <DoublearrowIcon slot="icon" rotate={180} />
+                <DoublearrowIcon slot="icon" />
             </ControlbarButton>
         </div>
         <ControlbarButton ariaLabel="Timeline-toggle" toggleable={true}>

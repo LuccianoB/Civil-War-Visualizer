@@ -54,8 +54,7 @@
         cursor: pointer;
     }
     .popup-content {
-        padding: 1em;
-        font-family: Arial, sans-serif;
+        font-size: 1em;
     }
     .popup-content h3 {
         margin-top: 0;

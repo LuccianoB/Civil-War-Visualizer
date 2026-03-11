@@ -1,20 +1,14 @@
 <script>
-    export let toggleable = false;
-    export let active = false;
-    export let onClick = () => {};
-    export let ariaLabel = "";
+    let { toggleable = false, active = false, onClick = () => {}, ariaLabel = "" } = $props();
 
     function handleClick() {
-        if (toggleable) {
-            active = !active;
-        }
         onClick();
     }
 </script>
 
 <button 
     class:active 
-    on:click={handleClick} 
+    onclick={handleClick}
     class="controlbar-button"
     aria-label={ariaLabel}
 >

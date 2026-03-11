@@ -1,11 +1,13 @@
 <script>
     import ControlbarButton from './ControlbarButton.svelte';
     import TimelineSliderDropdown from './TimelineSliderDropdown.svelte';
+    import CalendarPopup from './CalendarPopup.svelte';
     import { KeyIcon, CalendarIcon, LogoIcon, DoublearrowIcon, ArrowIcon, ClockArrowDownIcon, MapsettingsIcon, PlaybuttonIcon, PausebuttonIcon, InfoIcon } from '$lib/components/icons';
     import { currentDate } from '$lib/store';
     
     let playbackSpeed = "1";
     let timelineOpen = $state(false);
+    let calendarOpen = $state(false);
 
     function addDays(date, days) {
         const result = new Date(date);
@@ -71,15 +73,23 @@
                 <DoublearrowIcon slot="icon" />
             </ControlbarButton>
         </div>
-        <ControlbarButton ariaLabel="Timeline-toggle" toggleable={true} onClick={() => { timelineOpen = !timelineOpen; }}>
+        <ControlbarButton ariaLabel="Timeline-toggle" toggleable={true} active={timelineOpen} onClick={() => { timelineOpen = !timelineOpen; }}>
             <ClockArrowDownIcon slot="icon" />
         </ControlbarButton>
-        <ControlbarButton ariaLabel="Select Date by Calendar" toggleable={true}>
+        <ControlbarButton 
+            ariaLabel="Select Date by Calendar" 
+            toggleable={true}
+            active={calendarOpen}
+            onClick={() => { calendarOpen = !calendarOpen; }}
+        >
             <CalendarIcon slot="icon"/>
         </ControlbarButton>
     </div>
     {#if timelineOpen}
         <TimelineSliderDropdown />
+    {/if}
+    {#if calendarOpen}
+        <CalendarPopup dateValue={$currentDate} oneventchange={() => { calendarOpen = false; }} />
     {/if}
 </div>
 

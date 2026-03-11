@@ -8,6 +8,21 @@
     const minDate = CIVIL_WAR_START;
     const maxDate = CIVIL_WAR_END;
     
+    // Attach escape key listener to window
+    $effect(() => {
+        const listener = (e) => {
+            if (e.key === 'Escape') {
+                oneventchange?.();
+            }
+        };
+        
+        window.addEventListener('keydown', listener);
+        
+        return () => {
+            window.removeEventListener('keydown', listener);
+        };
+    });
+    
     // Weekday headers (abbreviated)
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
@@ -139,7 +154,7 @@
     };
 </script>
 
-<div class="calendar-popup">
+<div class="calendar-popup" role="dialog" tabindex="-1">
     <div class="calendar-header">
         <button class="nav-button" onclick={previousMonth} aria-label="Previous month">
             &lt;

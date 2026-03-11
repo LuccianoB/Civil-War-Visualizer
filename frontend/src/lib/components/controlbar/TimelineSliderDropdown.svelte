@@ -46,14 +46,6 @@
         gap: 0.75rem;
     }
 
-    .date-display {
-        text-align: center;
-        margin: 0;
-        color: var(--sidebar-icon);
-        font-size: 1rem;
-        font-weight: 600;
-    }
-
     .slider {
         width: 100%;
         cursor: pointer;

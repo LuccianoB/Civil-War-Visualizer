@@ -11,6 +11,8 @@ logs/
 test*.py
 debug*.py
 
+/node_modules/
+
 #data pipeline outputs
 data-pipeline/raw_data/
 data-pipeline/processed_data/

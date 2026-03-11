@@ -1,11 +1,12 @@
 <script>
     import { currentDate } from '$lib/store';
+    import { CIVIL_WAR_START, CIVIL_WAR_END } from '$lib/utils/constants';
     
     let { dateValue = new Date(), oneventchange = () => {} } = $props();
     
     // Civil War date range
-    const minDate = new Date('1861-04-12');
-    const maxDate = new Date('1865-05-26');
+    const minDate = CIVIL_WAR_START;
+    const maxDate = CIVIL_WAR_END;
     
     // Weekday headers (abbreviated)
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

@@ -1,3 +1,4 @@
 import { writable } from 'svelte/store';
+import { CIVIL_WAR_START } from './utils/constants';
 
-export const currentDate = writable(new Date('1861-04-12'));
+export const currentDate = writable(CIVIL_WAR_START);

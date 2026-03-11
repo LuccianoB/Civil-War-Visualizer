@@ -1,8 +1,9 @@
 <script>
     import { currentDate } from '$lib/store';
+    import { CIVIL_WAR_START_STR, CIVIL_WAR_END_STR } from '$lib/utils/constants';
 
-    const minDate = '1861-04-12';
-    const maxDate = '1865-05-26';
+    const minDate = CIVIL_WAR_START_STR;
+    const maxDate = CIVIL_WAR_END_STR;
     const minTimestamp = new Date(minDate).getTime();
     const maxTimestamp = new Date(maxDate).getTime();
 

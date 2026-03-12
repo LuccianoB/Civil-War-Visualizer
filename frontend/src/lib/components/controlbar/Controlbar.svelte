@@ -2,12 +2,14 @@
     import ControlbarButton from './ControlbarButton.svelte';
     import TimelineSliderDropdown from './TimelineSliderDropdown.svelte';
     import CalendarPopup from './CalendarPopup.svelte';
+    import KeyPopup from './KeyPopup.svelte';
     import { KeyIcon, CalendarIcon, LogoIcon, DoublearrowIcon, ArrowIcon, ClockArrowDownIcon, MapsettingsIcon, PlaybuttonIcon, PausebuttonIcon, InfoIcon } from '$lib/components/icons';
     import { currentDate } from '$lib/store';
     
     let playbackSpeed = "1";
     let timelineOpen = $state(false);
     let calendarOpen = $state(false);
+    let keyOpen = $state(false);
 
     function addDays(date, days) {
         const result = new Date(date);
@@ -38,7 +40,7 @@
             <LogoIcon width="2.5rem" height="2.5rem" />
         </div>
         <div class="top-right-buttons">
-            <ControlbarButton ariaLabel="Key" toggleable={true}>
+            <ControlbarButton ariaLabel="Key" toggleable={true} active={keyOpen} onClick={() => { keyOpen = !keyOpen; }}>
                 <KeyIcon slot="icon" />
             </ControlbarButton>
             <ControlbarButton ariaLabel="Map Settings" toggleable={true}>
@@ -90,6 +92,9 @@
     {/if}
     {#if calendarOpen}
         <CalendarPopup dateValue={$currentDate} oneventchange={() => { calendarOpen = false; }} />
+    {/if}
+    {#if keyOpen}
+        <KeyPopup oneventchange={() => { keyOpen = false; }} />
     {/if}
 </div>
 

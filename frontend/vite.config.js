@@ -14,5 +14,6 @@ export default defineConfig({
     port: 5173,
     open: true
   },
-  base: "/Civil-War-Visualizer/"
+  base: "/Civil-War-Visualizer/",
+
 })

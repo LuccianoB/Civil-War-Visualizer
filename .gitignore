@@ -8,8 +8,8 @@ logs/
 *.log
 *.sqlite3
 *.env
-test*.py
-debug*.py
+data-pipeline/scripts/test*.py
+data-pipeline/scripts/debug*.py
 
 /node_modules/
 

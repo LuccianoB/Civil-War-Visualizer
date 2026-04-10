@@ -1,6 +1,6 @@
 # Civil War Visualizer
 
- luccianob.github.io/Civil-War-Visualizer/
+ [[luccianob.github.io/Civil-War-Visualizer/]]
 
 An interactive historical map that shows major American Civil War battles over time.
 

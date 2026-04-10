@@ -1,7 +1,5 @@
 # Civil War Visualizer
 
- [Github Pages Link](https://luccianob.github.io/Civil-War-Visualizer/)
-
 An interactive historical map that shows major American Civil War battles over time.
 
 This project combines a Python data pipeline (Wikipedia + Wikidata enrichment) with a Svelte + MapLibre frontend to let users scrub through war dates and see which battles were active on any given day.
